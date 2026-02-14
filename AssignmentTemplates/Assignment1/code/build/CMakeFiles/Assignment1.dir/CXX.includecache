@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/COMP371/main.cpp
+src/A1solution.h
+/COMP371/src/A1solution.h
+iostream
+-
+
+/COMP371/src/A1solution.cpp
+A1solution.h
+/COMP371/src/A1solution.h
+iostream
+-
+
+/COMP371/src/A1solution.h
+iostream
+-
+
