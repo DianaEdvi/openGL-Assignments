@@ -3,14 +3,12 @@
 
 #include <iostream>
 
-using namespace std;
-
 class A1solution{
     public: 
         A1solution();
-        void run(string file_name);
+        void run(std::string file_name);
     private: 
-        string fileName;
+        std::string fileName;
 };
 
 

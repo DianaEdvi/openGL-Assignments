@@ -6,19 +6,33 @@
 
 #IncludeRegexTransform: 
 
-/COMP371/main.cpp
-src/A1solution.h
-/COMP371/src/A1solution.h
-iostream
--
-
 /COMP371/src/A1solution.cpp
 A1solution.h
 /COMP371/src/A1solution.h
-iostream
+GL/glew.h
 -
+GLFW/glfw3.h
+-
+glm/glm.hpp
+-
+Model.h
+/COMP371/src/Model.h
 
 /COMP371/src/A1solution.h
 iostream
+-
+
+/COMP371/src/Model.h
+iostream
+-
+string
+-
+vector
+-
+GL/glew.h
+-
+GLFW/glfw3.h
+-
+glm/glm.hpp
 -
 

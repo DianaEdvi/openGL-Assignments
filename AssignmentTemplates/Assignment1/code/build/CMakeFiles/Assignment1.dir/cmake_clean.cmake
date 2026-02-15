@@ -3,6 +3,7 @@ file(REMOVE_RECURSE
   "Assignment1.pdb"
   "CMakeFiles/Assignment1.dir/main.cpp.o"
   "CMakeFiles/Assignment1.dir/src/A1solution.cpp.o"
+  "CMakeFiles/Assignment1.dir/src/Model.cpp.o"
 )
 
 # Per-language clean rules from dependency scanning.

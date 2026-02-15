@@ -6,6 +6,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_CHECK_CXX
   "/COMP371/main.cpp" "/COMP371/build/CMakeFiles/Assignment1.dir/main.cpp.o"
   "/COMP371/src/A1solution.cpp" "/COMP371/build/CMakeFiles/Assignment1.dir/src/A1solution.cpp.o"
+  "/COMP371/src/Model.cpp" "/COMP371/build/CMakeFiles/Assignment1.dir/src/Model.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
