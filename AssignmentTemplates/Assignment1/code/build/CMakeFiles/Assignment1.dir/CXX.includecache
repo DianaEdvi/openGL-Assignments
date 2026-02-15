@@ -6,20 +6,16 @@
 
 #IncludeRegexTransform: 
 
-/COMP371/src/A1solution.cpp
-A1solution.h
-/COMP371/src/A1solution.h
-GL/glew.h
+/COMP371/src/Model.cpp
+Model.h
+/COMP371/src/Model.h
+iostream
 -
-GLFW/glfw3.h
+fstream
 -
 glm/glm.hpp
 -
-Model.h
-/COMP371/src/Model.h
-
-/COMP371/src/A1solution.h
-iostream
+glm/gtx/string_cast.hpp
 -
 
 /COMP371/src/Model.h
