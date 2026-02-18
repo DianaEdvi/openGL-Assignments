@@ -64,9 +64,53 @@ int A1solution::compileAndLinkShaders(const char* vertexShaderSource, const char
     return shaderProgram;
 }
 
-void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsigned int& VBO, unsigned int& EBO)
+void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsigned int& VBO, int& vertexCount)
 {
+    std::vector<glm::vec3> tempNormals(model.numberOfVertices, glm::vec3(0.0f));
+
+    for (size_t i = 0; i < model.indices.size(); i += 3) {
+        unsigned int i0 = model.indices[i];
+        unsigned int i1 = model.indices[i+1];
+        unsigned int i2 = model.indices[i+2];
+
+        glm::vec3 p0 = model.vertices[i0];
+        glm::vec3 p1 = model.vertices[i1];
+        glm::vec3 p2 = model.vertices[i2];
+
+        // Calculate Face Normal
+        glm::vec3 edge1 = p1 - p0;
+        glm::vec3 edge2 = p2 - p0;
+        // Note: If lighting is inverted, swap to cross(edge2, edge1)
+        glm::vec3 faceNormal = glm::normalize(glm::cross(edge1, edge2)); 
+
+        // Add this normal to all vertices that share this face
+        tempNormals[i0] += faceNormal;
+        tempNormals[i1] += faceNormal;
+        tempNormals[i2] += faceNormal;
+    }
+
+    std::vector<Vertex> bufferData;
+
+    // loop through every triangle, 3 indices at a time
+    for (int i = 0; i < model.indices.size(); i += 3){
+        // get indices
+        unsigned int i0 = model.indices[i];
+        unsigned int i1 = model.indices[i + 1];
+        unsigned int i2 = model.indices[i + 2];
+
+        // get positions 
+        glm::vec3 n0 = glm::normalize(tempNormals[i0]);
+        glm::vec3 n1 = glm::normalize(tempNormals[i1]);
+        glm::vec3 n2 = glm::normalize(tempNormals[i2]);
+
+        // populate the buffer 
+        bufferData.push_back({model.vertices[i0], n0});
+        bufferData.push_back({model.vertices[i1], n1});
+        bufferData.push_back({model.vertices[i2], n2});
+    }
     
+    vertexCount = bufferData.size();
+
     // 0 - create the vertex array
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -74,17 +118,15 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
     // create the vertex buffer
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, model.numberOfVertices * sizeof(glm::vec3), &model.vertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(Vertex), &bufferData[0], GL_STATIC_DRAW);
 
     // Attribute pointer: Location 0 = position 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
     glEnableVertexAttribArray(0);
 
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, model.indices.size() * sizeof(unsigned int), &model.indices[0], GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // Attribute pointer: Location 1 = normal 
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 }
@@ -98,6 +140,12 @@ void A1solution::renderScene(int shaderProgram, const Model& model, unsigned int
 
     glUniformMatrix4fv(mvLocation, 1, GL_FALSE, &model.modelView[0][0]);
     glUniformMatrix4fv(projLocation, 1, GL_FALSE, &model.projection[0][0]);
+
+    glUniform3f(glGetUniformLocation(shaderProgram, "ambientColor"), 0.1f, 0.05f, 0.05f);
+    glUniform3f(glGetUniformLocation(shaderProgram, "diffuseColor"), 1.0f, 0.5f, 0.5f);
+    glUniform3f(glGetUniformLocation(shaderProgram, "specularColor"), 0.3f, 0.3f, 0.3f);
+    glUniform1f(glGetUniformLocation(shaderProgram, "shininessVal"), 5.0f);
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), 0.0f, 0.0f, 0.0f);
 }
 
 
@@ -140,6 +188,8 @@ void A1solution::run(std::string file_name){
         return;
     }
 
+    glEnable(GL_DEPTH_TEST);
+
     int shaderProgram;
     int phongShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getPhongFragmentShaderSource());
     int flatShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getFlatFragmentShaderSource());
@@ -150,7 +200,8 @@ void A1solution::run(std::string file_name){
 
     unsigned int VAO, VBO, CBO, EBO;
     unsigned int PBO[3];
-    createRenderingData(model, VAO, VBO, EBO);
+    int vertexCount = 0;
+    createRenderingData(model, VAO, VBO, vertexCount);
 
     // For shader swapping 
     int counter = 0;
@@ -159,15 +210,15 @@ void A1solution::run(std::string file_name){
     while (!glfwWindowShouldClose(window))
     {
         // Black background
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
 
         renderScene(shaderProgram, model, VAO);
 
-        glDrawElements(GL_TRIANGLES, model.indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
         // Check for events (keyboard, mouse, window close)
         glfwPollEvents();
