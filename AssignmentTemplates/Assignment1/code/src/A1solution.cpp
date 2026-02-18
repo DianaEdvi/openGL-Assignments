@@ -89,8 +89,6 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
     glBindVertexArray(0);
 }
 
-
-
 void A1solution::run(std::string file_name){
     std::cout << "Run run" << std::endl;
 
@@ -130,12 +128,17 @@ void A1solution::run(std::string file_name){
         return;
     }
 
+    int shaderProgram;
     int basicShaderProgram = compileAndLinkShaders(getBasicVertexShaderSource(), getBasicFragmentShaderSource());
 
     unsigned int VAO, VBO, CBO, EBO;
     unsigned int PBO[3];
     createRenderingData(model, VAO, VBO, EBO);
-    
+
+    // For shader swapping 
+    int counter = 0;
+    bool wasSDown = false;
+
     while (!glfwWindowShouldClose(window))
     {
         // Black background
@@ -162,6 +165,31 @@ void A1solution::run(std::string file_name){
 
         // Swap the buffers (Display the result)
         glfwSwapBuffers(window);
+
+        bool isSDown = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
+        
+        // only reassign once per click
+        if (isSDown && !wasSDown){
+            counter++;
+            switch (counter % 4)
+            {
+            case 0:
+                std::cout << "Phong shader program" << std::endl;
+                break;
+            case 1:
+                std::cout << "Voronoi shader program" << std::endl;
+                break;
+            case 2:
+                std::cout << "Flat shader program" << std::endl;
+                break;
+            case 3:
+                std::cout << "Circle shader program" << std::endl;        
+            default:
+                break;
+            }
+        }
+
+        wasSDown = isSDown;
     }
 
     // Clean up resources when the loop ends
