@@ -28,13 +28,13 @@ const char* getPhongFragmentShaderSource()
 {
     return
     "#version 330 core\n"
-    "in vec3 fragPos;"
-    "in vec3 normal;"
+    "in vec3 fragPos;" // position of the pixel
+    "in vec3 normal;" // the direction the pixel is facing 
     // material colors 
-    "uniform vec3 ambientColor;"
-    "uniform vec3 diffuseColor;"
-    "uniform vec3 specularColor;"
-    "uniform float shininessVal;"
+    "uniform vec3 ambientColor;" // base
+    "uniform vec3 diffuseColor;" // angle dependent
+    "uniform vec3 specularColor;" // spot
+    "uniform float shininessVal;" // material
     "uniform vec3 lightPos;"
 
     "out vec4 FragColor;"
@@ -43,18 +43,18 @@ const char* getPhongFragmentShaderSource()
     "{"
     "   vec3 ambient = ambientColor;"
 
-    "   vec3 N = normalize(normal);"
-    "   vec3 L = normalize(lightPos - fragPos);"
-    "   vec3 V = normalize(-fragPos);"  
+    "   vec3 N = normalize(normal);" // normal
+    "   vec3 L = normalize(lightPos - fragPos);" // light direction from pixel to source
+    "   vec3 V = normalize(-fragPos);"  // view of the pixel from camera (assumed camera pos = (0,0,0))
 
-    "   float lambertian = max(dot(N,L), 0.0);"
-    "   vec3 diffuse = lambertian * diffuseColor;"
+    "   float lambertian = max(dot(N,L), 0.0);" // cosine of the angle between them
+    "   vec3 diffuse = lambertian * diffuseColor;" // the color of the object depending on the angle 
 
     "   vec3 specular = vec3(0.0);"
-    "   if (lambertian > 0.0){ "
-    "   vec3 R = reflect(-L, N);"
-    "   float specAngle = max(dot(R,V),0.0);"
-    "   specular = pow(specAngle, shininessVal) * specularColor;"
+    "   if (lambertian > 0.0){ " // only calc if light is hitting 
+    "   vec3 R = reflect(-L, N);" // Law of Reflection, calculates the direction the ray of light bounces off the surface
+    "   float specAngle = max(dot(R,V),0.0);" // check if that ray is hitting the camera 
+    "   specular = pow(specAngle, shininessVal) * specularColor;" // calculate the shininess (the bigger the shininessVal, the smaller the highlight = shinier)
     "}"
     "   FragColor = vec4(ambient + diffuse + specular,1.0);"
     "}";
