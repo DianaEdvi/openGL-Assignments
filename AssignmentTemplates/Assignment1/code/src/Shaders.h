@@ -5,14 +5,14 @@ const char* getBasicVertexShaderSource()
 {
     return
     "#version 330 core\n"
-    "layout (location = 0) in vec2 aPos;"
-    "layout (location = 1) in vec3 col;"
-    "out vec3 vertexColor;"
+    "layout (location = 0) in vec3 aPos;"
+    "uniform mat4 modelview;"
+    "uniform mat4 projection;"
+    "out vec4 vertexPos;"
     ""
     "void main()"
     "{"
-    "   gl_Position = vec4(aPos, 0, 1);"
-    "   vertexColor = col;"
+    "   gl_Position = projection * modelview * vec4(aPos, 1);"
     "}";
 }
 
@@ -20,12 +20,11 @@ const char* getBasicFragmentShaderSource()
 {
     return
     "#version 330 core\n"
-    "in vec3 vertexColor;"
-    "out vec3 FragColor;"
+    "out vec4 FragColor;"
     ""
     "void main()"
     "{"
-    "   FragColor = vertexColor;"
+    "   FragColor = vec4(1.0,1.0,1.0,1.0);"
     "}";
 }
 

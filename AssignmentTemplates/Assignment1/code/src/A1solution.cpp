@@ -8,14 +8,6 @@
 #include "Model.h"
 #include "Shaders.h"
 
-// void debug_gl(int place){
-//     GLenum e = glGetError();
-//     if(e!=GL_NO_ERROR){
-//         std::cout<<"We have an error! "<<place<<" "<<(void* )e<<std::endl;
-//     }
-// }
-
-
 A1solution::A1solution() {
     std::cout << "A1Solution created" << std::endl;
 }
@@ -72,27 +64,9 @@ int A1solution::compileAndLinkShaders(const char* vertexShaderSource, const char
     return shaderProgram;
 }
 
-void A1solution::createRenderingData(unsigned int& VAO, unsigned int& VBO,unsigned int& CBO, unsigned int PBO[], unsigned int& EBO)
+void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsigned int& VBO, unsigned int& EBO)
 {
-
-    // Define and upload geometry to the GPU here ...
-
-    float vertices[] = {
-        -0.5f, -0.5f,
-        0.5f,  -0.5f,
-        0.0f,  0.75f
-    };
-
-    unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 2
-    };
-
-    float color[] = {
-        1.0f,  0.0f, 0.0,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 1.0f
-    };
-
+    
     // 0 - create the vertex array
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -100,49 +74,18 @@ void A1solution::createRenderingData(unsigned int& VAO, unsigned int& VBO,unsign
     // create the vertex buffer
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, 3*2*sizeof(float), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, model.numberOfVertices * sizeof(glm::vec3), &model.vertices[0], GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    // Attribute pointer: Location 0 = position 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
     glEnableVertexAttribArray(0);
-
-    // create the color
-    glGenBuffers(1, &CBO);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO);
-    glBufferData(GL_ARRAY_BUFFER, 3*3*sizeof(float), color, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-
-    glGenBuffers(3, PBO);
-    // create the triplet of inputs
-    int offset = 2;
-
-    for(int i=0;i<3;++i){
-
-        glBindBuffer(GL_ARRAY_BUFFER, PBO[i]);
-
-        float buffer[6];
-        for(int j=0;j<3;++j){
-            for(int k=0;k<2;++k){
-                buffer[2*j+k] = vertices[2*i+k];
-            }
-        }
-
-        glBufferData(GL_ARRAY_BUFFER, 3*2*sizeof(float), buffer, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(offset+i, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(offset+i);
-    }
 
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3*sizeof(unsigned int), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, model.indices.size() * sizeof(unsigned int), &model.indices[0], GL_STATIC_DRAW);
 
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     glBindVertexArray(0);
 }
 
@@ -191,24 +134,31 @@ void A1solution::run(std::string file_name){
 
     unsigned int VAO, VBO, CBO, EBO;
     unsigned int PBO[3];
-    createRenderingData(VAO, VBO, CBO, PBO, EBO);
+    createRenderingData(model, VAO, VBO, EBO);
     
     while (!glfwWindowShouldClose(window))
     {
-        glClear(GL_COLOR_BUFFER_BIT);
-        glUseProgram(basicShaderProgram);
-
-
-        // Check for events (keyboard, mouse, window close)
-        glfwPollEvents();
-        
         // Black background
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(basicShaderProgram);
+        
         glBindVertexArray(VAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
+        int mvLocation = glGetUniformLocation(basicShaderProgram, "modelview");
+        int projLocation = glGetUniformLocation(basicShaderProgram, "projection");
+
+        glUniformMatrix4fv(mvLocation, 1, GL_FALSE, &model.modelView[0][0]);
+        glUniformMatrix4fv(projLocation, 1, GL_FALSE, &model.projection[0][0]);
+
+
+        glDrawElements(GL_TRIANGLES, model.indices.size(), GL_UNSIGNED_INT, 0);
+
+        // Check for events (keyboard, mouse, window close)
+        glfwPollEvents();
 
         // Swap the buffers (Display the result)
         glfwSwapBuffers(window);

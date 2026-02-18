@@ -3,6 +3,7 @@
 
 CMakeFiles/Assignment1.dir/main.cpp.o: ../main.cpp
 CMakeFiles/Assignment1.dir/main.cpp.o: ../src/A1solution.h
+CMakeFiles/Assignment1.dir/main.cpp.o: ../src/Model.h
 
 CMakeFiles/Assignment1.dir/src/A1solution.cpp.o: ../src/A1solution.cpp
 CMakeFiles/Assignment1.dir/src/A1solution.cpp.o: ../src/A1solution.h
