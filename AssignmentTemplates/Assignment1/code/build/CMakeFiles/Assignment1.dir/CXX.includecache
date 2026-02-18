@@ -17,6 +17,8 @@ glm/glm.hpp
 -
 Model.h
 /COMP371/src/Model.h
+Shaders.h
+/COMP371/src/Shaders.h
 
 /COMP371/src/A1solution.h
 iostream
@@ -35,4 +37,6 @@ GLFW/glfw3.h
 -
 glm/glm.hpp
 -
+
+/COMP371/src/Shaders.h
 

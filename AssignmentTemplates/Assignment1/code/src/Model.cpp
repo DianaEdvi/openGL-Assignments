@@ -20,7 +20,7 @@ Model::Model(const std::string& file_name){
         }
     }
 
-    // Read projection matric
+    // Read projection matrix
     for (int i = 0; i < 4; i++){
         for (int j = 0; j < 4; j++){
             file >> projection[i][j];
