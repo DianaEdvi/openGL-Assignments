@@ -89,6 +89,18 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
     glBindVertexArray(0);
 }
 
+void A1solution::renderScene(int shaderProgram, const Model& model, unsigned int& VAO){
+        
+    glBindVertexArray(VAO);
+
+    int mvLocation = glGetUniformLocation(shaderProgram, "modelview");
+    int projLocation = glGetUniformLocation(shaderProgram, "projection");
+
+    glUniformMatrix4fv(mvLocation, 1, GL_FALSE, &model.modelView[0][0]);
+    glUniformMatrix4fv(projLocation, 1, GL_FALSE, &model.projection[0][0]);
+}
+
+
 void A1solution::run(std::string file_name){
     std::cout << "Run run" << std::endl;
 
@@ -129,7 +141,12 @@ void A1solution::run(std::string file_name){
     }
 
     int shaderProgram;
-    int basicShaderProgram = compileAndLinkShaders(getBasicVertexShaderSource(), getBasicFragmentShaderSource());
+    int phongShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getPhongFragmentShaderSource());
+    int flatShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getFlatFragmentShaderSource());
+    int circleShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getCircleFragmentShaderSource());
+    int voronoiShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getVoronoiFragmentShaderSource());
+
+    shaderProgram = phongShaderProgram;
 
     unsigned int VAO, VBO, CBO, EBO;
     unsigned int PBO[3];
@@ -146,17 +163,9 @@ void A1solution::run(std::string file_name){
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(basicShaderProgram);
-        
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glUseProgram(shaderProgram);
 
-        int mvLocation = glGetUniformLocation(basicShaderProgram, "modelview");
-        int projLocation = glGetUniformLocation(basicShaderProgram, "projection");
-
-        glUniformMatrix4fv(mvLocation, 1, GL_FALSE, &model.modelView[0][0]);
-        glUniformMatrix4fv(projLocation, 1, GL_FALSE, &model.projection[0][0]);
-
+        renderScene(shaderProgram, model, VAO);
 
         glDrawElements(GL_TRIANGLES, model.indices.size(), GL_UNSIGNED_INT, 0);
 
@@ -175,15 +184,19 @@ void A1solution::run(std::string file_name){
             {
             case 0:
                 std::cout << "Phong shader program" << std::endl;
+                shaderProgram = phongShaderProgram;
                 break;
             case 1:
-                std::cout << "Voronoi shader program" << std::endl;
-                break;
-            case 2:
                 std::cout << "Flat shader program" << std::endl;
-                break;
+                shaderProgram = flatShaderProgram;
+            break;
+            case 2:
+                std::cout << "Circle shader program" << std::endl;
+                shaderProgram = circleShaderProgram;
+            break;
             case 3:
-                std::cout << "Circle shader program" << std::endl;        
+                std::cout << "Voronoi shader program" << std::endl;
+                    shaderProgram = voronoiShaderProgram;        
             default:
                 break;
             }

@@ -1,7 +1,7 @@
 #ifndef SHADERS_H
 #define SHADERS_H
 
-const char* getBasicVertexShaderSource()
+const char* getVertexShaderSource()
 {
     return
     "#version 330 core\n"
@@ -16,7 +16,7 @@ const char* getBasicVertexShaderSource()
     "}";
 }
 
-const char* getBasicFragmentShaderSource()
+const char* getPhongFragmentShaderSource()
 {
     return
     "#version 330 core\n"
@@ -28,6 +28,41 @@ const char* getBasicFragmentShaderSource()
     "}";
 }
 
+const char* getFlatFragmentShaderSource()
+{
+    return
+    "#version 330 core\n"
+    "out vec4 FragColor;"
+    ""
+    "void main()"
+    "{"
+    "   FragColor = vec4(1.0,1.0,0.0,1.0);"
+    "}";
+}
+
+const char* getCircleFragmentShaderSource()
+{
+    return
+    "#version 330 core\n"
+    "out vec4 FragColor;"
+    ""
+    "void main()"
+    "{"
+    "   FragColor = vec4(0.0,1.0,1.0,1.0);"
+    "}";
+}
+
+const char* getVoronoiFragmentShaderSource()
+{
+    return
+    "#version 330 core\n"
+    "out vec4 FragColor;"
+    ""
+    "void main()"
+    "{"
+    "   FragColor = vec4(1.0,0.0,1.0,1.0);"
+    "}";
+}
 
 
 #endif
