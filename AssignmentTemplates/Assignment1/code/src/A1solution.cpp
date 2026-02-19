@@ -230,6 +230,8 @@ void A1solution::run(std::string file_name){
     // For shader swapping 
     int counter = 0;
     bool wasSDown = false;
+    bool wasWDown = false;
+    bool isWireframe = false;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -251,33 +253,50 @@ void A1solution::run(std::string file_name){
         glfwSwapBuffers(window);
 
         bool isSDown = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
+        bool isWDown = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
         
         // only reassign once per click
         if (isSDown && !wasSDown){
             counter++;
             switch (counter % 4)
             {
-            case 0:
+                case 0:
                 std::cout << "Phong shader program" << std::endl;
                 shaderProgram = phongShaderProgram;
                 break;
-            case 1:
+                case 1:
                 std::cout << "Flat shader program" << std::endl;
                 shaderProgram = flatShaderProgram;
-            break;
-            case 2:
+                break;
+                case 2:
                 std::cout << "Circle shader program" << std::endl;
                 shaderProgram = circleShaderProgram;
-            break;
-            case 3:
-                std::cout << "Voronoi shader program" << std::endl;
-                    shaderProgram = voronoiShaderProgram;        
-            default:
                 break;
+                case 3:
+                std::cout << "Voronoi shader program" << std::endl;
+                shaderProgram = voronoiShaderProgram;        
+                default:
+                break;
+            }
+        }
+        
+        if (isWDown && !wasWDown){
+            if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+                if (!isWireframe){
+                    std::cout << "Wireframe mode" << std::endl;
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    isWireframe = true;
+                }
+                else {
+                    std::cout << "Shader mode" << std::endl;
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    isWireframe = false;
+                }
             }
         }
 
         wasSDown = isSDown;
+        wasWDown = isWDown;
     }
 
     // Clean up resources when the loop ends
