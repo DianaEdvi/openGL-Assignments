@@ -118,10 +118,15 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
         glm::vec3 edge2 = p2 - p0;
         glm::vec3 faceNormal = glm::normalize(glm::cross(edge1, edge2));
 
+        // Assign barycentric coords
+        glm::vec3 b0 = glm::vec3(1.0f, 0.0f, 0.0f);
+        glm::vec3 b1 = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::vec3 b2 = glm::vec3(0.0f, 0.0f, 1.0f);
+
         // populate the buffer 
-        bufferData.push_back({model.vertices[i0], n0, faceNormal});
-        bufferData.push_back({model.vertices[i1], n1, faceNormal});
-        bufferData.push_back({model.vertices[i2], n2, faceNormal});
+        bufferData.push_back({model.vertices[i0], n0, faceNormal, b0});
+        bufferData.push_back({model.vertices[i1], n1, faceNormal, b1});
+        bufferData.push_back({model.vertices[i2], n2, faceNormal, b2});
     }
     
     vertexCount = bufferData.size();
@@ -147,6 +152,11 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, faceNormal));
     glEnableVertexAttribArray(2);
 
+    // Attribute pointer: Location 3 = barycentric 
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, barycentric));
+    glEnableVertexAttribArray(3);
+
+
 
     glBindVertexArray(0);
 }
@@ -160,12 +170,6 @@ void A1solution::renderScene(int shaderProgram, const Model& model, unsigned int
 
     glUniformMatrix4fv(mvLocation, 1, GL_FALSE, &model.modelView[0][0]);
     glUniformMatrix4fv(projLocation, 1, GL_FALSE, &model.projection[0][0]);
-
-    glUniform3f(glGetUniformLocation(shaderProgram, "ambientColor"), 0.1f, 0.05f, 0.05f);
-    glUniform3f(glGetUniformLocation(shaderProgram, "diffuseColor"), 1.0f, 0.5f, 0.5f);
-    glUniform3f(glGetUniformLocation(shaderProgram, "specularColor"), 0.3f, 0.3f, 0.3f);
-    glUniform1f(glGetUniformLocation(shaderProgram, "shininessVal"), 5.0f);
-    glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), 0.0f, 0.0f, 0.0f);
 }
 
 

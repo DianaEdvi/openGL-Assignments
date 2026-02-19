@@ -19,6 +19,7 @@ struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec3 faceNormal;
+    glm::vec3 barycentric;
 
 };
 

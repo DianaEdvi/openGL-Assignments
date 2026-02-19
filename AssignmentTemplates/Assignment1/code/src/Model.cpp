@@ -49,7 +49,6 @@ Model::Model(const std::string& file_name){
 
 }
 
-
 // ------------------------ Output streams ------------------------ 
 
 std::ostream& operator<<(std::ostream& os, const glm::vec3& v) {
