@@ -123,8 +123,8 @@ const char* getCircleFragmentShaderSource()
         "float p1 = barycentric.x;"
         "float p2 = barycentric.y;"
         "float p3 = barycentric.z;"
-        "vec3 center = vec3(1.0/3.0, 1.0/3.0, 1.0/3.0);"
-        "vec3 edge = vec3(0.0f, 1.0/2.0, 1.0/2.0);"
+        "vec3 center = vec3(1.0/3.0, 1.0/3.0, 1.0/3.0);" // center of triangle
+        "vec3 edge = vec3(0.0f, 1.0/2.0, 1.0/2.0);" // one of the edges 
 
         "vec3 ambient = ambientColor;"
         "vec3 diffuse = diffuseColor;" 
@@ -135,21 +135,22 @@ const char* getCircleFragmentShaderSource()
         "vec3 V = normalize(-fragPos);"  
 
         "float lambertian = max(dot(N,L), 0.0);" 
+        "float radius = distance(center, edge);"
+        "float distanceToBarycentric = distance(center, barycentric);"
 
-        // check which coordinate is biggest and assign diffuse color to that
-        "if (distance(center, barycentric) > distance(center, edge)){"
+        // if the barycentric coordinate is outside the circle, color blue
+        "if (distanceToBarycentric > radius){"
         "   diffuse = lambertian * vec3(0.5f, 0.5f, 1.0f);"
         "   ambient = vec3(0.05f, 0.05f, 0.1f);"
         "}"
         "else {"
-        "if (lambertian > 0.0){ "  
-        "vec3 R = reflect(-L, N);" 
-        "float specAngle = max(dot(R,V),0.0);" 
-        "specular = pow(specAngle, shininessVal) * specularColor;" 
+            "if (lambertian > 0.0){ "  
+                "vec3 R = reflect(-L, N);" 
+                "float specAngle = max(dot(R,V),0.0);" 
+                "specular = pow(specAngle, shininessVal) * specularColor;" 
+            "}"
+            "diffuse = lambertian * diffuseColor;" 
         "}"
-        "diffuse = lambertian * diffuseColor;" 
-
-    "}"
         "FragColor = vec4(ambient + diffuse + specular,1.0);"
     "}";
 }

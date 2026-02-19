@@ -1,3 +1,6 @@
+// COMP 371 Assignment 1
+// Written by Diana Edvi (40198139)
+
 #include "A1solution.h"
 
 #define GLEW_STATIC 1   // This allows linking with Static Library on Windows, without DLL
@@ -131,7 +134,7 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
     
     vertexCount = bufferData.size();
 
-    // 0 - create the vertex array
+    // create the vertex array
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
@@ -156,12 +159,11 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, barycentric));
     glEnableVertexAttribArray(3);
 
-
-
     glBindVertexArray(0);
 }
 
-void A1solution::renderScene(int shaderProgram, const Model& model, unsigned int& VAO){
+// Pass in variables to gpu 
+void A1solution::assignUniforms(int shaderProgram, const Model& model, unsigned int& VAO){
         
     glBindVertexArray(VAO);
 
@@ -174,10 +176,7 @@ void A1solution::renderScene(int shaderProgram, const Model& model, unsigned int
 
 
 void A1solution::run(std::string file_name){
-    std::cout << "Run run" << std::endl;
-
     Model model(file_name);
-    // std::cout << model << std::endl;
 
     // Initialize GLFW and OpenGL version
     glfwInit();
@@ -187,14 +186,7 @@ void A1solution::run(std::string file_name){
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    // Verify window size
-    if (model.windowWidth <= 0 || model.windowHeight <= 0) {
-        std::cerr << "Error: Invalid window dimensions from model file!" << std::endl;
-        // Fallback so the window at least opens
-        model.windowWidth = 800;
-        model.windowHeight = 600;
-    }
-    // Create Window and rendering context using GLFW, resolution is 800x600
+    // Create Window and rendering context using GLFW
     GLFWwindow* window = glfwCreateWindow(model.windowWidth, model.windowHeight, "Comp371 - Assignment 1", NULL, NULL);
     if (window == NULL)
     {
@@ -214,6 +206,7 @@ void A1solution::run(std::string file_name){
 
     glEnable(GL_DEPTH_TEST);
 
+    // Compile and link shaders
     int shaderProgram;
     int phongShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getPhongFragmentShaderSource());
     int flatShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getFlatFragmentShaderSource());
@@ -222,12 +215,11 @@ void A1solution::run(std::string file_name){
 
     shaderProgram = phongShaderProgram;
 
-    unsigned int VAO, VBO, CBO, EBO;
-    unsigned int PBO[3];
+    unsigned int VAO, VBO;
     int vertexCount = 0;
     createRenderingData(model, VAO, VBO, vertexCount);
 
-    // For shader swapping 
+    // For shader swapping and mode swapping
     int counter = 0;
     bool wasSDown = false;
     bool wasWDown = false;
@@ -242,20 +234,20 @@ void A1solution::run(std::string file_name){
 
         glUseProgram(shaderProgram);
 
-        renderScene(shaderProgram, model, VAO);
+        assignUniforms(shaderProgram, model, VAO);
 
         glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
         // Check for events (keyboard, mouse, window close)
         glfwPollEvents();
 
-        // Swap the buffers (Display the result)
+        // Swap the buffers (display the result)
         glfwSwapBuffers(window);
 
         bool isSDown = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
         bool isWDown = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
         
-        // only reassign once per click
+        // switch shader programs
         if (isSDown && !wasSDown){
             counter++;
             switch (counter % 4)
@@ -280,6 +272,7 @@ void A1solution::run(std::string file_name){
             }
         }
         
+        // switch mode
         if (isWDown && !wasWDown){
             if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
                 if (!isWireframe){
