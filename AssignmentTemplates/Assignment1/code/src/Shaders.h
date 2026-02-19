@@ -7,11 +7,13 @@ const char* getVertexShaderSource()
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;"
     "layout (location = 1) in vec3 aNormal;"
+    "layout (location = 2) in vec3 aFaceNormal;"
     "uniform mat4 modelview;"
     "uniform mat4 projection;"
     
     "out vec3 fragPos;"
     "out vec3 normal;"
+    "flat out vec3 flatNormal;"
     ""
     "void main()"
     "{"
@@ -19,6 +21,7 @@ const char* getVertexShaderSource()
         "fragPos = viewPos.xyz;"
         "mat3 normalMat = transpose(inverse(mat3(modelview)));"
         "normal = normalize(mat3(normalMat) * aNormal);"
+        "flatNormal = normalize(normalMat * aFaceNormal);"
     "   gl_Position = projection * viewPos;"
     "   "
     "}";
@@ -60,15 +63,40 @@ const char* getPhongFragmentShaderSource()
     "}";
 }
 
+// Same as Phong, with a few changes
 const char* getFlatFragmentShaderSource()
 {
     return
     "#version 330 core\n"
+    "in vec3 fragPos;" 
+    "flat in vec3 flatNormal;" // The direction the face is facing 
+    // material colors 
+    "uniform vec3 ambientColor;" 
+    "uniform vec3 diffuseColor;" 
+    "uniform vec3 specularColor;" 
+    "uniform float shininessVal;" 
+    "uniform vec3 lightPos;"
+
     "out vec4 FragColor;"
     ""
     "void main()"
     "{"
-    "   FragColor = vec4(1.0,1.0,0.0,1.0);"
+    "   vec3 ambient = ambientColor;"
+
+    "   vec3 N = normalize(flatNormal);" // face normal
+    "   vec3 L = normalize(lightPos - fragPos);" 
+    "   vec3 V = normalize(-fragPos);"  
+
+    "   float lambertian = max(dot(N,L), 0.0);" 
+    "   vec3 diffuse = lambertian * diffuseColor;" 
+
+    "   vec3 specular = vec3(0.0);"
+    "   if (lambertian > 0.0){ "  
+    "   vec3 R = reflect(-L, N);" 
+    "   float specAngle = max(dot(R,V),0.0);" 
+    "   specular = pow(specAngle, shininessVal) * specularColor;" 
+    "}"
+    "   FragColor = vec4(ambient + diffuse + specular,1.0);"
     "}";
 }
 

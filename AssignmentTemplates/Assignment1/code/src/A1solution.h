@@ -18,6 +18,8 @@ class A1solution{
 struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
+    glm::vec3 faceNormal;
+
 };
 
 

@@ -66,13 +66,19 @@ int A1solution::compileAndLinkShaders(const char* vertexShaderSource, const char
 
 void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsigned int& VBO, int& vertexCount)
 {
-    std::vector<glm::vec3> tempNormals(model.numberOfVertices, glm::vec3(0.0f));
+    // Represents each vertex's normal, where the normal is the sum of the normals of all of the faces that touch it
+    // The indices used for indexing in this array access the same vertices as in the vertices array
+    std::vector<glm::vec3> summedNormals(model.numberOfVertices, glm::vec3(0.0f));
 
+    // Loop through indices, and for each triangle, add the normal of the triangle face to each of its indice
+    // By the end, every 
     for (size_t i = 0; i < model.indices.size(); i += 3) {
+        // Get the indices of the triangle 
         unsigned int i0 = model.indices[i];
         unsigned int i1 = model.indices[i+1];
         unsigned int i2 = model.indices[i+2];
 
+        // Get the vertices of the triangle based on indices 
         glm::vec3 p0 = model.vertices[i0];
         glm::vec3 p1 = model.vertices[i1];
         glm::vec3 p2 = model.vertices[i2];
@@ -80,13 +86,12 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
         // Calculate Face Normal
         glm::vec3 edge1 = p1 - p0;
         glm::vec3 edge2 = p2 - p0;
-        // Note: If lighting is inverted, swap to cross(edge2, edge1)
         glm::vec3 faceNormal = glm::normalize(glm::cross(edge1, edge2)); 
 
         // Add this normal to all vertices that share this face
-        tempNormals[i0] += faceNormal;
-        tempNormals[i1] += faceNormal;
-        tempNormals[i2] += faceNormal;
+        summedNormals[i0] += faceNormal;
+        summedNormals[i1] += faceNormal;
+        summedNormals[i2] += faceNormal;
     }
 
     std::vector<Vertex> bufferData;
@@ -97,16 +102,26 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
         unsigned int i0 = model.indices[i];
         unsigned int i1 = model.indices[i + 1];
         unsigned int i2 = model.indices[i + 2];
-
+        
         // get positions 
-        glm::vec3 n0 = glm::normalize(tempNormals[i0]);
-        glm::vec3 n1 = glm::normalize(tempNormals[i1]);
-        glm::vec3 n2 = glm::normalize(tempNormals[i2]);
+        // must normalize because they are probably not 1
+        glm::vec3 n0 = glm::normalize(summedNormals[i0]);
+        glm::vec3 n1 = glm::normalize(summedNormals[i1]);
+        glm::vec3 n2 = glm::normalize(summedNormals[i2]);
+        
+        glm::vec3 p0 = model.vertices[i0];
+        glm::vec3 p1 = model.vertices[i1];
+        glm::vec3 p2 = model.vertices[i2];
+        
+        // Calculate Face Normal
+        glm::vec3 edge1 = p1 - p0;
+        glm::vec3 edge2 = p2 - p0;
+        glm::vec3 faceNormal = glm::normalize(glm::cross(edge1, edge2));
 
         // populate the buffer 
-        bufferData.push_back({model.vertices[i0], n0});
-        bufferData.push_back({model.vertices[i1], n1});
-        bufferData.push_back({model.vertices[i2], n2});
+        bufferData.push_back({model.vertices[i0], n0, faceNormal});
+        bufferData.push_back({model.vertices[i1], n1, faceNormal});
+        bufferData.push_back({model.vertices[i2], n2, faceNormal});
     }
     
     vertexCount = bufferData.size();
@@ -127,6 +142,11 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
     // Attribute pointer: Location 1 = normal 
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
     glEnableVertexAttribArray(1);
+    
+    // Attribute pointer: Location 2 = face normal 
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, faceNormal));
+    glEnableVertexAttribArray(2);
+
 
     glBindVertexArray(0);
 }
@@ -153,7 +173,7 @@ void A1solution::run(std::string file_name){
     std::cout << "Run run" << std::endl;
 
     Model model(file_name);
-    std::cout << model << std::endl;
+    // std::cout << model << std::endl;
 
     // Initialize GLFW and OpenGL version
     glfwInit();
