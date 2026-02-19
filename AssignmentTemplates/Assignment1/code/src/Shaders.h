@@ -107,11 +107,50 @@ const char* getCircleFragmentShaderSource()
 {
     return
     "#version 330 core\n"
+    "in vec3 fragPos;"
+    "in vec3 barycentric;" 
+    "in vec3 normal;"
+    "uniform vec3 ambientColor = vec3(0.1f, 0.05f, 0.05f);"
+    "uniform vec3 specularColor = vec3(0.3f, 0.3f, 0.3f);" 
+    "uniform float shininessVal = 5.0f;"
+    "uniform vec3 lightPos = vec3(0.0f, 0.0f, 0.0f);"
+    
     "out vec4 FragColor;"
     ""
     "void main()"
     "{"
-    "   FragColor = vec4(1.0,1.0,0.0,0.0);"
+        "vec3 diffuseColor = vec3(1.0f, 0.5f, 0.5f);"
+        "float p1 = barycentric.x;"
+        "float p2 = barycentric.y;"
+        "float p3 = barycentric.z;"
+        "vec3 center = vec3(1.0/3.0, 1.0/3.0, 1.0/3.0);"
+        "vec3 edge = vec3(0.0f, 1.0/2.0, 1.0/2.0);"
+
+        "vec3 ambient = ambientColor;"
+        "vec3 diffuse = diffuseColor;" 
+        "vec3 specular = vec3(0.0);" 
+
+        "vec3 N = normalize(normal);"
+        "vec3 L = normalize(lightPos - fragPos);" 
+        "vec3 V = normalize(-fragPos);"  
+
+        "float lambertian = max(dot(N,L), 0.0);" 
+
+        // check which coordinate is biggest and assign diffuse color to that
+        "if (distance(center, barycentric) > distance(center, edge)){"
+        "   diffuse = lambertian * vec3(0.5f, 0.5f, 1.0f);"
+        "   ambient = vec3(0.05f, 0.05f, 0.1f);"
+        "}"
+        "else {"
+        "if (lambertian > 0.0){ "  
+        "vec3 R = reflect(-L, N);" 
+        "float specAngle = max(dot(R,V),0.0);" 
+        "specular = pow(specAngle, shininessVal) * specularColor;" 
+        "}"
+        "diffuse = lambertian * diffuseColor;" 
+
+    "}"
+        "FragColor = vec4(ambient + diffuse + specular,1.0);"
     "}";
 }
 
