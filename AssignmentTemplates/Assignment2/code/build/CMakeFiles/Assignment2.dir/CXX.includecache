@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/COMP371/src/A2solution.cpp
+A2solution.h
+/COMP371/src/A2solution.h
+GL/glew.h
+-
+GLFW/glfw3.h
+-
+glm/glm.hpp
+-
+glm/gtc/matrix_transform.hpp
+-
+Model.h
+/COMP371/src/Model.h
+Shaders.h
+/COMP371/src/Shaders.h
+
+/COMP371/src/A2solution.h
+iostream
+-
+Model.h
+/COMP371/src/Model.h
+
+/COMP371/src/Model.h
+iostream
+-
+string
+-
+vector
+-
+GL/glew.h
+-
+GLFW/glfw3.h
+-
+glm/glm.hpp
+-
+
+/COMP371/src/Shaders.h
+
