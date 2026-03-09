@@ -197,16 +197,60 @@ void A2solution::assignUniforms(int shaderProgram, const Model& model, unsigned 
     glUniformMatrix4fv(projLocation, 1, GL_FALSE, &model.projection[0][0]);
 }
 
-void A2solution::pickTriangle(const Model& model){
+void A2solution::pickTriangle(const Model& model, const glm::vec3 screenCoords, int width, int height){
+    // Extract camera position from the modelView matrix
+    glm::mat4 invertedView = glm::inverse(model.modelView);
+    glm::vec3 cameraPos = glm::vec3(invertedView[3]);
+    
     std::vector<glm::vec3> vertices;
     vertices.resize(model.numberOfVertices);
-    glm::vec4 viewport = glm::vec4(0,0,model.windowWidth, model.windowHeight);
+    
+    // Use the actual dynamic width and height
+    glm::vec4 viewport = glm::vec4(0, 0, width, height);
 
     // Project all vertices onto the screen
     for (int i = 0; i < model.numberOfVertices; i++){
         vertices[i] = glm::project(model.vertices[i], model.modelView, model.projection, viewport);
-        std::cout << vertices[i].x << std::endl;
     }
+
+    
+    float closestDistance = INFINITY;
+    int closestTriangleIndex = -1;
+    glm::vec3 closestBarycentric;
+    glm::vec3 closestEuclidean;
+    // Calculate barycentric coodinates for each triangle
+    for (int i = 0; i < model.indices.size(); i += 3){
+        unsigned int i0 = model.indices[i];
+        unsigned int i1 = model.indices[i + 1];
+        unsigned int i2 = model.indices[i + 2];
+
+        glm::vec3 v0 = vertices[i0];
+        glm::vec3 v1 = vertices[i1];
+        glm::vec3 v2 = vertices[i2];
+
+        glm::vec3 barycentric = calculateBarycentricWeights(screenCoords, v0, v1, v2);
+        if (!(barycentric.x >= 0 && barycentric.y >= 0 && barycentric.z >= 0)) continue;
+
+        // std::cout << "point is inside triangle: barycentric: " << barycentric.x << ", " << barycentric.y << ", " << barycentric.z << std::endl;
+        
+        glm::vec3 euclidian = barycentric.x * model.vertices[i0] + barycentric.y * model.vertices[i1] + barycentric.z * model.vertices[i2];
+        
+        // std::cout << "Euclidean pos: " << euclidian.x << ", " << euclidian.y << ", " << euclidian.z << std::endl;
+        if (euclidian.z > cameraPos.z) continue; // If behind camera, dont
+
+        float distance = glm::distance(cameraPos, euclidian);
+        if (distance < closestDistance){
+            closestDistance = distance;
+            closestTriangleIndex = i;
+            closestBarycentric = barycentric;
+            closestEuclidean = euclidian;
+        }
+    }
+
+    if (closestTriangleIndex == -1) return;
+    std::cout << closestTriangleIndex << " " << closestBarycentric.x << " " << closestBarycentric.y << " " << closestBarycentric.z << " " << closestEuclidean.x << " " << closestEuclidean.y << " " << closestEuclidean.z << std::endl;
+
+
 }
 
 glm::vec3 A2solution::calculateBarycentricWeights(const glm::vec3& P, const glm::vec3& A, const glm::vec3& B, const glm::vec3& C){
@@ -224,9 +268,6 @@ glm::vec3 A2solution::calculateBarycentricWeights(const glm::vec3& P, const glm:
     return glm::vec3(alpha, beta, gamma);
 }
 
-
-
-
 void A2solution::run(std::string file_name){
     Model model(file_name);
 
@@ -237,6 +278,9 @@ void A2solution::run(std::string file_name){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+    // // Disable window resizing to prevent aspect ratio stretching
+    // glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     // Create Window and rendering context using GLFW
     GLFWwindow* window = glfwCreateWindow(model.windowWidth, model.windowHeight, "Comp371 - Assignment 1", NULL, NULL);
@@ -282,6 +326,19 @@ void A2solution::run(std::string file_name){
 
     while (!glfwWindowShouldClose(window))
     {
+        // Get the actual pixel size of the visual framebuffer
+        int fbWidth, fbHeight;
+        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+        
+        // // Prevent division by zero if the window is minimized
+        // if (fbHeight == 0) fbHeight = 1;         
+        // // Overwrite the projection matrix dynamically
+        // float aspectRatio = (float)fbWidth / (float)fbHeight;
+        // model.projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
+
+        // Scale the rendering to match this exact size
+        glViewport(0, 0, fbWidth, fbHeight);
+
         // Black background
         glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 
@@ -307,13 +364,22 @@ void A2solution::run(std::string file_name){
         if (mousePressed){
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
+            
+            // Dynamically get the actual window size
+            int actualWidth, actualHeight;
+            glfwGetWindowSize(window, &actualWidth, &actualHeight);
+            
+            // Invert Y relative to the actual window height
+            float convertedY = actualHeight - ypos; 
 
+            glm::vec3 screenCoords = glm::vec3(xpos, convertedY, 0);
             if (!mouseDown) {
                 mouseDown = true;
                 std::cout << "Mouse Pressed at: " << xpos << ", " << ypos << std::endl;
-                pickTriangle(model);
+                pickTriangle(model, screenCoords, actualWidth, actualHeight); 
             } else {
                 std::cout << "Mouse Dragging at: " << xpos << ", " << ypos << std::endl;
+                pickTriangle(model, screenCoords, actualWidth, actualHeight); 
             }
         }
         else {

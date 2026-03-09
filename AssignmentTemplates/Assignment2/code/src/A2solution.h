@@ -13,9 +13,9 @@ class A2solution{
         void assignUniforms(int shaderProgram, const Model& model, unsigned int& VAO);
     private: 
         std::string fileName;
-        void pickTriangle(const Model& model);
+        void pickTriangle(const Model& model, const glm::vec3 screenCoords, int width, int height);
         glm::vec3 calculateBarycentricWeights(const glm::vec3& P, const glm::vec3& A, const glm::vec3& B, const glm::vec3& C);
-};
+};  
 
 struct Vertex {
     glm::vec3 position;
