@@ -213,11 +213,11 @@ void A2solution::pickTriangle(const Model& model, const glm::vec3 screenCoords, 
         vertices[i] = glm::project(model.vertices[i], model.modelView, model.projection, viewport);
     }
 
-    
     float closestDistance = INFINITY;
     int closestTriangleIndex = -1;
     glm::vec3 closestBarycentric;
     glm::vec3 closestEuclidean;
+
     // Calculate barycentric coodinates for each triangle
     for (int i = 0; i < model.indices.size(); i += 3){
         unsigned int i0 = model.indices[i];
@@ -230,12 +230,9 @@ void A2solution::pickTriangle(const Model& model, const glm::vec3 screenCoords, 
 
         glm::vec3 barycentric = calculateBarycentricWeights(screenCoords, v0, v1, v2);
         if (!(barycentric.x >= 0 && barycentric.y >= 0 && barycentric.z >= 0)) continue;
-
-        // std::cout << "point is inside triangle: barycentric: " << barycentric.x << ", " << barycentric.y << ", " << barycentric.z << std::endl;
         
         glm::vec3 euclidian = barycentric.x * model.vertices[i0] + barycentric.y * model.vertices[i1] + barycentric.z * model.vertices[i2];
         
-        // std::cout << "Euclidean pos: " << euclidian.x << ", " << euclidian.y << ", " << euclidian.z << std::endl;
         if (euclidian.z > cameraPos.z) continue; // If behind camera, dont
 
         float distance = glm::distance(cameraPos, euclidian);
@@ -248,8 +245,7 @@ void A2solution::pickTriangle(const Model& model, const glm::vec3 screenCoords, 
     }
 
     if (closestTriangleIndex == -1) return;
-    std::cout << closestTriangleIndex << " " << closestBarycentric.x << " " << closestBarycentric.y << " " << closestBarycentric.z << " " << closestEuclidean.x << " " << closestEuclidean.y << " " << closestEuclidean.z << std::endl;
-
+    std::cout << "Index: " << closestTriangleIndex << " Barycentric xyz: " << closestBarycentric.x << " " << closestBarycentric.y << " " << closestBarycentric.z << " Euclidean xyz: " << closestEuclidean.x << " " << closestEuclidean.y << " " << closestEuclidean.z << std::endl;
 
 }
 
