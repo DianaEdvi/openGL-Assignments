@@ -126,10 +126,25 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
         glm::vec3 b1 = glm::vec3(0.0f, 1.0f, 0.0f);
         glm::vec3 b2 = glm::vec3(0.0f, 0.0f, 1.0f);
 
+        // Calculate center and radius 
+        float e0 = glm::distance(p1, p2);
+        float e1 = glm::distance(p0, p2);
+        float e2 = glm::distance(p0, p1);
+
+        float perimeter = e0 + e1 + e2;
+
+        glm::vec3 inCenterWorld = (e0 * p0 + e1 * p1 + e2 * p2) / perimeter;
+
+        // Heron's formula
+        float semi = perimeter/2.0;
+        float area = std::sqrt(semi * (semi - e0) * (semi - e1) * (semi - e2));
+
+        float inRadius = area / semi;
+
         // populate the buffer 
-        bufferData.push_back({model.vertices[i0], n0, faceNormal, b0});
-        bufferData.push_back({model.vertices[i1], n1, faceNormal, b1});
-        bufferData.push_back({model.vertices[i2], n2, faceNormal, b2});
+        bufferData.push_back({model.vertices[i0], n0, faceNormal, b0, inCenterWorld, inRadius});
+        bufferData.push_back({model.vertices[i1], n1, faceNormal, b1, inCenterWorld, inRadius});
+        bufferData.push_back({model.vertices[i2], n2, faceNormal, b2, inCenterWorld, inRadius});
     }
     
     vertexCount = bufferData.size();
@@ -159,6 +174,13 @@ void A1solution::createRenderingData(const Model& model, unsigned int& VAO, unsi
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, barycentric));
     glEnableVertexAttribArray(3);
 
+    // Attribute pointer: Location 4 = inCenterWorld 
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, inCenterWorld));
+    glEnableVertexAttribArray(4);
+
+    // Attribute pointer: Location 5 = inRadius 
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, inRadius));
+    glEnableVertexAttribArray(5);
     glBindVertexArray(0);
 }
 

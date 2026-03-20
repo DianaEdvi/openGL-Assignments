@@ -20,7 +20,8 @@ struct Vertex {
     glm::vec3 normal;
     glm::vec3 faceNormal;
     glm::vec3 barycentric;
-
+    glm::vec3 inCenterWorld;
+    float inRadius;
 };
 
 
